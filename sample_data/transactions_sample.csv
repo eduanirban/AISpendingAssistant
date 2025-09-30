@@ -1,0 +1,11 @@
+date,description,amount,type,account,currency
+2025-01-02,STARBUCKS 1234,-4.75,debit,Checking,USD
+2025-01-03,AMAZON Mktp US*AB12,-23.40,debit,Checking,USD
+2025-01-04,Payroll ACME Corp,2500.00,credit,Checking,USD
+2025-01-05,UBER TRIP - SF,-17.65,debit,Checking,USD
+2025-01-06,WHOLE FOODS MARKET,-86.12,debit,Checking,USD
+2025-02-01,Rent Payment,-2500.00,debit,Checking,USD
+2025-02-02,LYFT RIDE,-14.20,debit,Checking,USD
+2025-02-03,SPOTIFY,-9.99,debit,Checking,USD
+2025-02-04,Payroll ACME Corp,2500.00,credit,Checking,USD
+2025-02-10,SHELL GAS,-52.10,debit,Checking,USD

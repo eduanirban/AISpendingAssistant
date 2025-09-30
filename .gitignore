@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.env
+.venv/
+
+# macOS
+.DS_Store
+
+# Byte-compiled / optimized / DLL files
+*.pyo
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Streamlit cache
+.streamlit/
+
+# Local data/state
+/data/
+*.db
+
+# Logs
+logs/
+*.log
+
+# VSCode / IDE
+.vscode/
+.idea/
