@@ -89,7 +89,7 @@ def simulate_paths(
     years_until_mortgage_end: int,
     cfg: MCConfig,
     income_series: np.ndarray | None = None,
-) -> Tuple[np.ndarray, np.ndarray]:
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     Returns:
       balances: shape (n_sims, T) path of balances
@@ -129,7 +129,8 @@ def simulate_paths(
         balances[:, t] = growth - spend[t]
 
     alive_mask = balances > 0.0
-    return balances, alive_mask
+    path_avg_returns = boot.mean(axis=1)
+    return balances, alive_mask, path_avg_returns
 
 
 def simulate_paths_two_asset(
@@ -229,7 +230,8 @@ def simulate_paths_two_asset(
         balances_total[:, t] = balances_s + balances_b
 
     alive_mask = balances_total > 0.0
-    return balances_total, alive_mask
+    path_avg_returns = (w_s * s_boot + w_b * b_boot).mean(axis=1)
+    return balances_total, alive_mask, path_avg_returns
 
 
 def simulate_paths_two_asset_taxed(
@@ -250,7 +252,7 @@ def simulate_paths_two_asset_taxed(
     contribution_target: str,  # 'taxable' | 'traditional' | 'roth'
     cfg: MCConfig,
     income_series: np.ndarray | None = None,
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Simulate with three buckets and simple taxes.
 
     - Monthly portfolio return r = w_s*s + w_b*b applied to all buckets.
@@ -397,4 +399,5 @@ def simulate_paths_two_asset_taxed(
     # Alive mask and average withdrawals
     alive_mask = balances_total > 0.0
     avg_withdrawals = per_sim_withdrawals.mean(axis=0)  # (T, 3)
-    return balances_total, alive_mask, avg_withdrawals
+    path_avg_returns = r_boot.mean(axis=1)
+    return balances_total, alive_mask, avg_withdrawals, path_avg_returns

@@ -170,12 +170,27 @@ def render_simulation():
 
             return inc
 
+        # CSS for bordered simulation section and status badge
+        st.markdown(
+            """
+            <style>
+            .sim-section { border: 1px solid #dee2e6; border-radius: 8px; padding: 16px; }
+            .status-badge { display:inline-block; padding:6px 10px; border-radius: 999px; color:#fff; font-weight:600; }
+            .status-green { background:#2f9e44; }
+            .status-yellow { background:#f59f00; }
+            .status-red { background:#e03131; }
+            </style>
+            """,
+            unsafe_allow_html=True,
+        )
+
         avg_withdrawals = None
+        path_avg_returns = None
         income_series = None
         if use_two_asset and use_taxed:
             # Taxed, ordered withdrawals; requires both equity and bond returns
             income_series = build_income_series(int(years_horizon * 12))
-            balances, alive, avg_withdrawals = simulate_paths_two_asset_taxed(
+            balances, alive, avg_withdrawals, path_avg_returns = simulate_paths_two_asset_taxed(
                 initial_taxable=init_taxable,
                 initial_traditional=init_trad,
                 initial_roth=init_roth,
@@ -196,7 +211,7 @@ def render_simulation():
             )
         elif use_two_asset:
             income_series = build_income_series(int(years_horizon * 12))
-            balances, alive = simulate_paths_two_asset(
+            balances, alive, path_avg_returns = simulate_paths_two_asset(
                 initial_balance=initial_balance,
                 stock_returns=rets,
                 bond_returns=bond_rets,
@@ -212,7 +227,7 @@ def render_simulation():
             )
         else:
             income_series = build_income_series(int(years_horizon * 12))
-            balances, alive = simulate_paths(
+            balances, alive, path_avg_returns = simulate_paths(
                 initial_balance=initial_balance,
                 ret_series=rets,
                 years_horizon=int(years_horizon),
@@ -235,6 +250,9 @@ def render_simulation():
         survival = survival_path_alive[:, -1].mean()
 
         st.success(f"Survival to joint life horizon: {survival*100:.1f}%")
+
+        # Begin bordered section
+        st.markdown('<div class="sim-section">', unsafe_allow_html=True)
 
         # Plot bands
         try:
@@ -266,6 +284,51 @@ def render_simulation():
             })
         st.dataframe(pd.DataFrame(rows), use_container_width=True, height=300)
 
+        # Success indicator (ending balance > 0)
+        end_bal = balances[:, -1]
+        success_rate = float((end_bal > 0).mean())
+        if success_rate >= 0.85:
+            cls = "status-green"
+        elif success_rate >= 0.60:
+            cls = "status-yellow"
+        else:
+            cls = "status-red"
+        st.markdown(f"<span class='status-badge {cls}'>Success rate: {success_rate*100:.1f}% of sims</span>", unsafe_allow_html=True)
+
+        # Regime table by path-average returns quartiles
+        if path_avg_returns is not None and len(path_avg_returns) == balances.shape[0]:
+            # Compute quartile thresholds
+            q25, q50, q75 = np.percentile(path_avg_returns, [25, 50, 75])
+            regimes = []
+            labels = [
+                "Significantly Below Historical Avg. Returns",
+                "Below Historical Average Returns",
+                "Historical Average Returns",
+                "Above Historical Average Returns",
+            ]
+            masks = [
+                path_avg_returns <= q25,
+                (path_avg_returns > q25) & (path_avg_returns <= q50),
+                (path_avg_returns > q50) & (path_avg_returns <= q75),
+                path_avg_returns > q75,
+            ]
+            for label, m in zip(labels, masks):
+                if not np.any(m):
+                    regimes.append({"Regime": label, "Sims": 0, "Share %": 0.0, "End p10": 0.0, "End p50": 0.0, "End p90": 0.0})
+                    continue
+                ends = end_bal[m]
+                regimes.append({
+                    "Regime": label,
+                    "Sims": int(m.sum()),
+                    "Share %": float(100.0 * m.mean()),
+                    "End p10": float(np.percentile(ends, 10)),
+                    "End p50": float(np.percentile(ends, 50)),
+                    "End p90": float(np.percentile(ends, 90)),
+                })
+            regimes_df = pd.DataFrame(regimes)
+            st.subheader("Ending Balance by Return Regime")
+            st.dataframe(regimes_df, use_container_width=True)
+
         # Visual guide: Withdrawal order and sources chart
         st.subheader("Withdrawal Order and Sources")
         st.markdown("- **Order**: Taxable → Traditional (taxed as ordinary income) → Roth (tax-free).\n- **Gross-up**: To deliver net spending after tax, taxable and traditional withdrawals are grossed up by their tax rates.")
@@ -296,3 +359,6 @@ def render_simulation():
                 st.area_chart(ann_df.set_index("Year"), height=240)
         else:
             st.info("Taxed withdrawal order visualization is available when both Equity and Bond returns are provided and taxes are enabled.")
+
+        # Close bordered section
+        st.markdown('</div>', unsafe_allow_html=True)
