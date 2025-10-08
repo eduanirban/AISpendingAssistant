@@ -42,13 +42,12 @@ if nav == "Portfolio Analysis":
     st.caption("Plan retirement with a clear view of ages, portfolios, income, and expenses.")
 
     # Sub-tabs within Portfolio Analysis (Simulation moved below tabs)
-    tab_details, tab_portfolios, tab_income, tab_expenses, tab_social, tab_other_income, tab_policy = st.tabs([
+    tab_details, tab_portfolios, tab_income, tab_expenses, tab_social, tab_policy = st.tabs([
         "User Details",
         "Current Portfolios",
         "Income",
         "Expenses",
         "Social & Pension",
-        "Other Income",
         "Policy",
     ])
 
@@ -62,8 +61,6 @@ if nav == "Portfolio Analysis":
         render_expenses()
     with tab_social:
         render_social_pension()
-    with tab_other_income:
-        render_other_income()
     with tab_policy:
         render_policy()
     # Simulation section on main page (below tabs)
