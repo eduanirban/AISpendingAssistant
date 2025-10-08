@@ -19,6 +19,8 @@ from finance_ai.ui.portfolio.portfolios import render_current_portfolios
 from finance_ai.ui.portfolio.income import render_income
 from finance_ai.ui.portfolio.expenses import render_expenses
 from finance_ai.ui.portfolio.simulation import render_simulation
+from finance_ai.ui.portfolio.social_pension import render_social_pension
+from finance_ai.ui.portfolio.other_income import render_other_income
 
 st.set_page_config(page_title="Finance AI Assistant", layout="wide")
 
@@ -39,11 +41,13 @@ with portfolio_tab:
     st.caption("Plan retirement with a clear view of ages, portfolios, income, and expenses.")
 
     # Sub-tabs within Portfolio Analysis
-    tab_details, tab_portfolios, tab_income, tab_expenses, tab_sim = st.tabs([
+    tab_details, tab_portfolios, tab_income, tab_expenses, tab_social, tab_other_income, tab_sim = st.tabs([
         "User Details",
         "Current Portfolios",
         "Income",
         "Expenses",
+        "Social & Pension",
+        "Other Income",
         "Simulation",
     ])
 
@@ -55,6 +59,10 @@ with portfolio_tab:
         render_income()
     with tab_expenses:
         render_expenses()
+    with tab_social:
+        render_social_pension()
+    with tab_other_income:
+        render_other_income()
     with tab_sim:
         render_simulation()
 
