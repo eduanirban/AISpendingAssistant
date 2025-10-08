@@ -21,6 +21,7 @@ from finance_ai.ui.portfolio.expenses import render_expenses
 from finance_ai.ui.portfolio.simulation import render_simulation
 from finance_ai.ui.portfolio.social_pension import render_social_pension
 from finance_ai.ui.portfolio.other_income import render_other_income
+from finance_ai.ui.portfolio.policy import render_policy
 
 st.set_page_config(page_title="Finance AI Assistant", layout="wide")
 
@@ -40,15 +41,15 @@ with portfolio_tab:
     st.title("Portfolio Analysis")
     st.caption("Plan retirement with a clear view of ages, portfolios, income, and expenses.")
 
-    # Sub-tabs within Portfolio Analysis
-    tab_details, tab_portfolios, tab_income, tab_expenses, tab_social, tab_other_income, tab_sim = st.tabs([
+    # Sub-tabs within Portfolio Analysis (Simulation moved below tabs)
+    tab_details, tab_portfolios, tab_income, tab_expenses, tab_social, tab_other_income, tab_policy = st.tabs([
         "User Details",
         "Current Portfolios",
         "Income",
         "Expenses",
         "Social & Pension",
         "Other Income",
-        "Simulation",
+        "Policy",
     ])
 
     with tab_details:
@@ -63,8 +64,12 @@ with portfolio_tab:
         render_social_pension()
     with tab_other_income:
         render_other_income()
-    with tab_sim:
-        render_simulation()
+    with tab_policy:
+        render_policy()
+    # Simulation section on main page (below tabs)
+    st.markdown("---")
+    st.header("Simulation")
+    render_simulation()
 
 with spending_tab:
     st.title("Finance AI Assistant (MVP)")

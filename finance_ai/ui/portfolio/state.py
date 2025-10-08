@@ -42,6 +42,19 @@ def init_portfolio_state():
                 "mortgage_ends_at_age": 0,
                 "payer": "self",
             },
+            "policy": {
+                # Allocation & Rebalancing
+                "stock_weight": 0.60,
+                "annual_rebalance": True,
+                # Contributions (household, pre-retirement)
+                "monthly_contrib": 0.0,
+                "annual_contrib_growth": 0.0,  # 0.03 => 3%
+                "contrib_target": "traditional",  # traditional|roth|taxable
+                # Taxes & withdrawal order
+                "use_taxed": True,
+                "ordinary_tax": 0.22,
+                "capg_tax": 0.15,
+            },
         }
         # Windfalls: list of {label, amount, age}
         st.session_state["portfolio"].setdefault("windfalls", [])

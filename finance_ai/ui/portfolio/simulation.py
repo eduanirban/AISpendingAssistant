@@ -44,41 +44,19 @@ def render_simulation():
     with c3:
         run_btn = st.button("Run Simulation", type="primary", use_container_width=True)
 
-    # Allocation and bond data
-    st.markdown("---")
-    a1, a2, a3 = st.columns([1,1,1])
-    with a1:
-        stock_weight = st.slider("Equity allocation (%)", min_value=0, max_value=100, value=60, step=5, key="mc_stock_w") / 100.0
-    with a2:
-        # Internal default for bond returns; no UI input
-        bond_csv = os.path.join("data", "market", "bond_monthly.csv")
-    with a3:
-        annual_rebalance = st.checkbox("Annual rebalance", value=True, key="mc_rebalance")
+    # Internal data paths
+    bond_csv = os.path.join("data", "market", "bond_monthly.csv")
 
-    # Contributions (pre-retirement)
-    st.markdown("#### Contributions (pre-retirement)")
-    ccon1, ccon2 = st.columns(2)
-    with ccon1:
-        monthly_contrib = st.number_input(
-            "Household monthly contribution (today's $)", min_value=0.0, value=0.0, step=100.0, format="%.2f", key="mc_contrib_monthly"
-        )
-    with ccon2:
-        annual_contrib_growth = st.number_input(
-            "Annual contribution growth %", min_value=0.0, max_value=20.0, value=0.0, step=0.5, key="mc_contrib_growth"
-        ) / 100.0
-
-    # Taxes & Withdrawal Order (Taxable -> Traditional -> Roth)
-    st.markdown("#### Taxes & Withdrawal Order")
-    tx1, tx2, tx3 = st.columns(3)
-    with tx1:
-        use_taxed = st.checkbox("Use taxes + withdrawal order", value=True, key="mc_use_taxed")
-    with tx2:
-        ordinary_tax = st.number_input("Ordinary income tax % (Traditional)", min_value=0.0, max_value=60.0, value=22.0, step=1.0, key="mc_tax_ordinary")/100.0
-    with tx3:
-        capg_tax = st.number_input("Capital gains tax % (Taxable)", min_value=0.0, max_value=40.0, value=15.0, step=1.0, key="mc_tax_cg")/100.0
-    tx4, _ = st.columns([1,3])
-    with tx4:
-        contrib_target = st.selectbox("Direct contributions to", options=["traditional", "roth", "taxable"], index=0, key="mc_contrib_target")
+    # Read policy from session state (set via Policy tab)
+    pol = st.session_state.portfolio.get("policy", {})
+    stock_weight = float(pol.get("stock_weight", 0.60))
+    annual_rebalance = bool(pol.get("annual_rebalance", True))
+    monthly_contrib = float(pol.get("monthly_contrib", 0.0))
+    annual_contrib_growth = float(pol.get("annual_contrib_growth", 0.0))
+    contrib_target = str(pol.get("contrib_target", "traditional"))
+    use_taxed = bool(pol.get("use_taxed", True))
+    ordinary_tax = float(pol.get("ordinary_tax", 0.22))
+    capg_tax = float(pol.get("capg_tax", 0.15))
 
     # Derive household parameters
     self_age = st.session_state.portfolio["user"]["self"]["age"]
