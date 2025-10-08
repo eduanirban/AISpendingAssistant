@@ -23,7 +23,7 @@ from finance_ai.ui.portfolio.social_pension import render_social_pension
 from finance_ai.ui.portfolio.other_income import render_other_income
 from finance_ai.ui.portfolio.policy import render_policy
 
-st.set_page_config(page_title="Finance AI Assistant", layout="wide")
+st.set_page_config(page_title="Finance AI Workbook", layout="wide")
 
 DATA_DIR = os.path.join(os.getcwd(), "data")
 DB_PATH = os.path.join(DATA_DIR, "finance.db")
@@ -34,10 +34,10 @@ def get_repo():
     engine, SessionLocal = init_db(DB_PATH)
     return TransactionRepository(engine=engine, SessionLocal=SessionLocal)
 
-# Tabs layout
-portfolio_tab, spending_tab = st.tabs(["Portfolio Analysis", "Spending analyzer"])
+# Left-hand navigation
+nav = st.sidebar.radio("Navigate", ["Portfolio Analysis", "Spending Analyzer"], index=0)
 
-with portfolio_tab:
+if nav == "Portfolio Analysis":
     st.title("Portfolio Analysis")
     st.caption("Plan retirement with a clear view of ages, portfolios, income, and expenses.")
 
@@ -71,18 +71,17 @@ with portfolio_tab:
     st.header("Simulation")
     render_simulation()
 
-with spending_tab:
-    st.title("Finance AI Assistant (MVP)")
+else:
+    st.title("Spending Analyzer")
     st.caption("Privacy-first: all data stays local. Upload CSV/OFX, get insights.")
 
-    # Initialize repository when Spending analyzer tab is active
+    # Initialize repository when Spending Analyzer is active
     repo = get_repo()
 
-    # Sidebar - Upload & Ingestion
-    with st.sidebar:
-        st.header("Upload Transactions")
-        uploaded = st.file_uploader("CSV or OFX/QFX", type=["csv", "ofx", "qfx"]) 
-        commit_btn = st.button("Ingest Uploaded File")
+    # Upload & Ingestion (moved from sidebar to main content)
+    st.subheader("Upload Transactions")
+    uploaded = st.file_uploader("CSV or OFX/QFX", type=["csv", "ofx", "qfx"]) 
+    commit_btn = st.button("Ingest Uploaded File")
 
     if uploaded is not None and commit_btn:
         ext = os.path.splitext(uploaded.name)[1].lower()
