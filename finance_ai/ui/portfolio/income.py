@@ -1,4 +1,5 @@
 import streamlit as st
+import pandas as pd
 from .state import init_portfolio_state
 
 
@@ -43,3 +44,34 @@ def render_income():
     m1.metric("Your annual income", f"${total_self:,.0f}")
     m2.metric("Partner annual income", f"${total_partner:,.0f}")
     m3.metric("Household income", f"${(total_self + total_partner):,.0f}")
+
+    st.markdown("---")
+    st.subheader("Windfalls (one-time)")
+    st.caption("Enter one-time lump sums such as property sale or downsizing proceeds.")
+
+    windfalls = st.session_state.portfolio.get("windfalls", []) or []
+    df = pd.DataFrame(windfalls, columns=["label", "amount", "age"]).rename(columns={
+        "label": "Label", "amount": "Amount", "age": "Age"
+    })
+
+    edited = st.data_editor(
+        df,
+        num_rows="dynamic",
+        use_container_width=True,
+        column_config={
+            "Label": st.column_config.TextColumn(required=False),
+            "Amount": st.column_config.NumberColumn(min_value=0.0, step=1000.0, format="%.2f"),
+            "Age": st.column_config.NumberColumn(min_value=0, max_value=120, step=1),
+        },
+        hide_index=True,
+    )
+
+    # Persist back
+    clean = []
+    for _, row in edited.fillna({"Label": "", "Amount": 0.0, "Age": 0}).iterrows():
+        label = str(row["Label"]).strip()
+        amount = float(row["Amount"]) if pd.notna(row["Amount"]) else 0.0
+        age = int(row["Age"]) if pd.notna(row["Age"]) else 0
+        if label or amount > 0:
+            clean.append({"label": label, "amount": amount, "age": age})
+    st.session_state.portfolio["windfalls"] = clean

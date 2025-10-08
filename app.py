@@ -20,7 +20,6 @@ from finance_ai.ui.portfolio.income import render_income
 from finance_ai.ui.portfolio.expenses import render_expenses
 from finance_ai.ui.portfolio.simulation import render_simulation
 from finance_ai.ui.portfolio.social_pension import render_social_pension
-from finance_ai.ui.portfolio.other_income import render_other_income
 from finance_ai.ui.portfolio.policy import render_policy
 
 st.set_page_config(page_title="Finance AI Workbook", layout="wide")
