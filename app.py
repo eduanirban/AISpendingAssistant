@@ -14,6 +14,10 @@ from finance_ai.intelligence.categorizer import categorize_transactions
 from finance_ai.intelligence.insights import compute_insights
 from finance_ai.intelligence.commentary import render_commentary
 from finance_ai.ui.components import render_overview_cards, render_charts, render_transactions_table
+from finance_ai.ui.portfolio.user_details import render_user_details
+from finance_ai.ui.portfolio.portfolios import render_current_portfolios
+from finance_ai.ui.portfolio.income import render_income
+from finance_ai.ui.portfolio.expenses import render_expenses
 
 st.set_page_config(page_title="Finance AI Assistant", layout="wide")
 
@@ -26,68 +30,95 @@ def get_repo():
     engine, SessionLocal = init_db(DB_PATH)
     return TransactionRepository(engine=engine, SessionLocal=SessionLocal)
 
-repo = get_repo()
+# Tabs layout
+portfolio_tab, spending_tab = st.tabs(["Portfolio Analysis", "Spending analyzer"])
 
-st.title("Finance AI Assistant (MVP)")
-st.caption("Privacy-first: all data stays local. Upload CSV/OFX, get insights.")
+with portfolio_tab:
+    st.title("Portfolio Analysis")
+    st.caption("Plan retirement with a clear view of ages, portfolios, income, and expenses.")
 
-with st.sidebar:
-    st.header("Upload Transactions")
-    uploaded = st.file_uploader("CSV or OFX/QFX", type=["csv", "ofx", "qfx"]) 
-    commit_btn = st.button("Ingest Uploaded File")
+    # Sub-tabs within Portfolio Analysis
+    tab_details, tab_portfolios, tab_income, tab_expenses = st.tabs([
+        "User Details",
+        "Current Portfolios",
+        "Income",
+        "Expenses",
+    ])
 
-if uploaded is not None and commit_btn:
-    ext = os.path.splitext(uploaded.name)[1].lower()
-    try:
-        if ext == ".csv":
-            df = parse_csv(uploaded)
-        elif ext in (".ofx", ".qfx"):
-            df = parse_ofx(uploaded)
-        else:
-            st.error("Unsupported file type.")
-            df = None
-        if df is not None and not df.empty:
-            df = normalize_transactions(df)
-            df = compute_hashes(df)
-            existing = set(repo.get_existing_hashes())
-            df_new = filter_new_transactions(df, existing)
-            if df_new.empty:
-                st.info("No new transactions found (deduplicated).")
+    with tab_details:
+        render_user_details()
+    with tab_portfolios:
+        render_current_portfolios()
+    with tab_income:
+        render_income()
+    with tab_expenses:
+        render_expenses()
+
+with spending_tab:
+    st.title("Finance AI Assistant (MVP)")
+    st.caption("Privacy-first: all data stays local. Upload CSV/OFX, get insights.")
+
+    # Initialize repository when Spending analyzer tab is active
+    repo = get_repo()
+
+    # Sidebar - Upload & Ingestion
+    with st.sidebar:
+        st.header("Upload Transactions")
+        uploaded = st.file_uploader("CSV or OFX/QFX", type=["csv", "ofx", "qfx"]) 
+        commit_btn = st.button("Ingest Uploaded File")
+
+    if uploaded is not None and commit_btn:
+        ext = os.path.splitext(uploaded.name)[1].lower()
+        try:
+            if ext == ".csv":
+                df = parse_csv(uploaded)
+            elif ext in (".ofx", ".qfx"):
+                df = parse_ofx(uploaded)
             else:
-                df_new = enrich_transactions(df_new)
-                df_new = categorize_transactions(df_new)
-                inserted = repo.insert_transactions(df_new)
-                st.success(f"Ingested {inserted} new transactions.")
-        else:
-            st.warning("No transactions parsed from file.")
-    except Exception as e:
-        st.exception(e)
+                st.error("Unsupported file type.")
+                df = None
+            if df is not None and not df.empty:
+                df = normalize_transactions(df)
+                df = compute_hashes(df)
+                existing = set(repo.get_existing_hashes())
+                df_new = filter_new_transactions(df, existing)
+                if df_new.empty:
+                    st.info("No new transactions found (deduplicated).")
+                else:
+                    df_new = enrich_transactions(df_new)
+                    df_new = categorize_transactions(df_new)
+                    inserted = repo.insert_transactions(df_new)
+                    st.success(f"Ingested {inserted} new transactions.")
+            else:
+                st.warning("No transactions parsed from file.")
+        except Exception as e:
+            st.exception(e)
 
-# Filters
-st.subheader("Filters")
-col1, col2, col3 = st.columns(3)
-with col1:
-    start_date = st.date_input("Start date", value=datetime(datetime.now().year, 1, 1))
-with col2:
-    end_date = st.date_input("End date", value=datetime.now().date())
-with col3:
-    category_filter = st.text_input("Category contains", value="")
+    # Filters
+    st.subheader("Filters")
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        start_date = st.date_input("Start date", value=datetime(datetime.now().year, 1, 1))
+    with col2:
+        end_date = st.date_input("End date", value=datetime.now().date())
+    with col3:
+        category_filter = st.text_input("Category contains", value="")
 
-# Data fetch
-df_all = repo.fetch_transactions(start_date=start_date, end_date=end_date, category_contains=category_filter)
+    # Data fetch
+    df_all = repo.fetch_transactions(start_date=start_date, end_date=end_date, category_contains=category_filter)
 
-# Overview cards
-metrics = compute_insights(df_all)
-render_overview_cards(metrics)
+    # Overview cards
+    metrics = compute_insights(df_all)
+    render_overview_cards(metrics)
 
-# Charts
-render_charts(df_all, metrics)
+    # Charts
+    render_charts(df_all, metrics)
 
-# Commentary
-st.subheader("Insights Feed")
-for block in render_commentary(metrics):
-    st.markdown(block)
+    # Commentary
+    st.subheader("Insights Feed")
+    for block in render_commentary(metrics):
+        st.markdown(block)
 
-# Table
-st.subheader("Transactions")
-render_transactions_table(df_all)
+    # Table
+    st.subheader("Transactions")
+    render_transactions_table(df_all)
