@@ -21,6 +21,7 @@ from finance_ai.ui.portfolio.expenses import render_expenses
 from finance_ai.ui.portfolio.simulation import render_simulation
 from finance_ai.ui.portfolio.social_pension import render_social_pension
 from finance_ai.ui.portfolio.policy import render_policy
+from finance_ai.ui.portfolio.scenario_io import export_portfolio_to_csv_bytes, import_portfolio_from_csv
 
 st.set_page_config(page_title="Finance AI Workbook", layout="wide")
 
@@ -39,6 +40,25 @@ nav = st.sidebar.radio("Navigate", ["Portfolio Analysis", "Spending Analyzer"], 
 if nav == "Portfolio Analysis":
     st.title("Portfolio Analysis")
     st.caption("Plan retirement with a clear view of ages, portfolios, income, and expenses.")
+
+    # Scenario Save/Load
+    st.markdown("---")
+    st.subheader("Scenario Save/Load")
+    sc1, sc2 = st.columns([1,1])
+    with sc1:
+        csv_bytes = export_portfolio_to_csv_bytes()
+        st.download_button(
+            label="Download scenario CSV",
+            data=csv_bytes,
+            file_name="portfolio_scenario.csv",
+            mime="text/csv",
+            use_container_width=True,
+        )
+    with sc2:
+        up = st.file_uploader("Upload scenario CSV", type=["csv"], key="scenario_upload")
+        if up is not None and st.button("Load scenario", use_container_width=True):
+            import_portfolio_from_csv(up.read())
+            st.success("Scenario loaded. Values updated.")
 
     # Sub-tabs within Portfolio Analysis (Simulation moved below tabs)
     tab_details, tab_portfolios, tab_income, tab_expenses, tab_social, tab_policy = st.tabs([
