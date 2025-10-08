@@ -23,6 +23,19 @@ def render_income():
             help="Annual pension income (once in pay)", key=f"inc_{who}_pension"
         )
 
+        # Start ages (compact row)
+        a1, a2 = st.columns(2)
+        st.session_state.portfolio["income"][who]["rental_start_age"] = a1.number_input(
+            "Rental start age (0 = now)", min_value=0, max_value=110,
+            value=int(st.session_state.portfolio["income"][who].get("rental_start_age", 0)), step=1,
+            key=f"inc_{who}_rental_start_age"
+        )
+        st.session_state.portfolio["income"][who]["pension_start_age"] = a2.number_input(
+            "Pension start age", min_value=0, max_value=110,
+            value=int(st.session_state.portfolio["income"][who].get("pension_start_age", 0)), step=1,
+            key=f"inc_{who}_pension_start_age"
+        )
+
     # Summary
     total_self = sum(st.session_state.portfolio["income"]["self"].values())
     total_partner = sum(st.session_state.portfolio["income"]["partner"].values())
